@@ -1,6 +1,6 @@
 # Claude Code (CLI)
 
-Claude Code, Anthropic's terminal assistant, uses the `claude mcp` command to manage MCP servers.
+Claude Code uses the `claude mcp` command to manage MCP servers.
 
 ## Add the server
 
@@ -12,7 +12,7 @@ claude mcp add --transport http salesmind \
   --header "X-API-KEY: YOUR_API_KEY"
 ```
 
-SSE (fallback):
+SSE fallback:
 
 ```bash
 claude mcp add --transport sse salesmind \
@@ -20,7 +20,7 @@ claude mcp add --transport sse salesmind \
   --header "X-API-KEY: YOUR_API_KEY"
 ```
 
-### Prefer an environment variable
+### Using an environment variable
 
 ```bash
 export SALESMIND_API_KEY=YOUR_API_KEY
@@ -30,9 +30,9 @@ claude mcp add --transport http salesmind \
   --header "X-API-KEY: $SALESMIND_API_KEY"
 ```
 
-### Scope the configuration
+### Scope
 
-By default the server is added at the `local` scope (current project). Use `--scope user` to make it available in every project, or `--scope project` to commit it to the repository (it will be stored in `.mcp.json` alongside your code):
+By default the server is added at the `local` scope (current project). Use `--scope user` to make it available everywhere:
 
 ```bash
 claude mcp add --transport http --scope user salesmind \
@@ -43,8 +43,8 @@ claude mcp add --transport http --scope user salesmind \
 ## Manage
 
 ```bash
-claude mcp list              # List all configured servers
-claude mcp get salesmind     # Show details for a specific server
+claude mcp list              # List configured servers
+claude mcp get salesmind     # Show details
 claude mcp remove salesmind  # Remove the server
 ```
 
@@ -62,9 +62,9 @@ Start Claude Code and run:
 
 If the connection fails, see [troubleshooting](../troubleshooting.md).
 
-## Manual `.mcp.json`
+## Manual config file
 
-If you prefer to edit the file by hand, add:
+Add to `.mcp.json` at the project root or `~/.claude.json` for user scope:
 
 ```json
 {
@@ -79,5 +79,3 @@ If you prefer to edit the file by hand, add:
   }
 }
 ```
-
-Claude Code reads `.mcp.json` at the project root and `~/.claude.json` at the user scope.

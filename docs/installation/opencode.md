@@ -1,6 +1,8 @@
 # OpenCode
 
-[OpenCode](https://opencode.ai) is an open-source terminal coding agent that supports MCP through its `opencode.json` configuration file.
+> **Status:** Tested and working.
+
+[OpenCode](https://opencode.ai) is an open-source terminal coding agent that supports MCP through its `opencode.json` config file.
 
 ## Configuration
 
@@ -22,7 +24,7 @@ Edit `~/.config/opencode/opencode.json` (user scope) or `opencode.json` in the p
 }
 ```
 
-For SSE:
+### SSE fallback
 
 ```json
 {
@@ -39,7 +41,7 @@ For SSE:
 }
 ```
 
-## Environment variable expansion
+### Using an environment variable
 
 OpenCode expands `${ENV_VAR}` inside header values:
 
@@ -66,8 +68,8 @@ Launch `opencode` and run:
 /mcp
 ```
 
-The `salesmind` entry should report `Connected` and list the available tools. Then:
+The `salesmind` entry should show `Connected`. Then ask:
 
-> Use SalesMind AI to list my top 10 active opportunities.
+> Use SalesMind AI to list my active campaigns.
 
-If the server fails to connect, open the log pane (`Ctrl-L` / `F12`) or see [troubleshooting](../troubleshooting.md).
+If the connection fails, check the log pane (`Ctrl-L` / `F12`) or see [troubleshooting](../troubleshooting.md).

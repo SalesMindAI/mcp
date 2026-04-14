@@ -1,8 +1,37 @@
-# OpenAI (Responses API, ChatGPT, Codex CLI)
+# OpenAI (ChatGPT, Responses API, Codex CLI)
 
-OpenAI products consume remote MCP servers through the **Responses API**'s `tools: [{ type: "mcp" }]` parameter. The same configuration block works for ChatGPT custom GPTs and for the OpenAI Codex CLI.
+This guide covers connecting to the SalesMind AI MCP from OpenAI products: ChatGPT (web and desktop), the Responses API, and Codex CLI.
 
-## Responses API (TypeScript / JavaScript)
+## ChatGPT Web and ChatGPT Desktop
+
+ChatGPT Web and Desktop do not support custom HTTP headers for MCP connections. Use the **query parameter** method instead -- append your API key directly in the URL.
+
+### Setup
+
+1. In ChatGPT, go to **Settings > Connectors > Create** (Team/Enterprise plans).
+2. Enter the MCP URL **with your API key as a query parameter**:
+
+   ```
+   https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY
+   ```
+
+3. Save and authorize the connector for your conversation.
+
+That's it. ChatGPT will discover the `search` and `execute` tools automatically.
+
+> **Why query parameter?** ChatGPT Web and Desktop only support OAuth or no auth for MCP connections -- they cannot send custom headers like `X-API-KEY`. The query parameter fallback (`?api_key=`) solves this. The connection is still over HTTPS, so the key is encrypted in transit.
+
+### Verify
+
+Start a new conversation and ask:
+
+> List my SalesMind AI campaigns.
+
+ChatGPT should call the MCP tools and return your data.
+
+---
+
+## Responses API (TypeScript)
 
 ```ts
 import OpenAI from "openai";
@@ -10,7 +39,7 @@ import OpenAI from "openai";
 const openai = new OpenAI();
 
 const response = await openai.responses.create({
-  model: "gpt-5",
+  model: "gpt-4.1",
   input: "List my 10 most recent SalesMind AI leads.",
   tools: [
     {
@@ -31,12 +60,13 @@ console.log(response.output_text);
 ## Responses API (Python)
 
 ```python
+import os
 from openai import OpenAI
 
 client = OpenAI()
 
 response = client.responses.create(
-    model="gpt-5",
+    model="gpt-4.1",
     input="List my 10 most recent SalesMind AI leads.",
     tools=[
         {
@@ -54,20 +84,13 @@ response = client.responses.create(
 print(response.output_text)
 ```
 
-## ChatGPT custom connector
+> **Tip:** Set `require_approval: "always"` if you want a confirmation step before any tool runs.
 
-In ChatGPT Team/Enterprise:
-
-1. **Settings → Connectors → Create**.
-2. Enter `https://mcp.sales-mind.ai/mcp` as the MCP URL.
-3. Add a custom header `X-API-KEY` with your key.
-4. Save and authorise the connector for your conversation.
-
-> ChatGPT currently only accepts Streamable HTTP MCP servers.
+---
 
 ## OpenAI Codex CLI
 
-Codex reads `~/.codex/config.toml`. Add:
+Edit `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.salesmind]
@@ -80,10 +103,10 @@ X-API-KEY = "YOUR_API_KEY"
 
 Then run `codex` and ask it to use SalesMind AI.
 
+---
+
 ## Verify
 
-Run the example above and confirm the response cites data from your SalesMind AI workspace. Enable `require_approval: "always"` if you want an explicit confirmation step before tools run.
+For the Responses API, run the example and confirm the response contains data from your SalesMind AI workspace.
 
-## Notes on approvals and safety
-
-The Responses API exposes `require_approval` with values `"always"`, `"never"`, or a granular object. For production agents that perform writes (create / update / delete), keep approvals on or narrow the set of allowed tools using the `allowed_tools` field.
+If the connection fails, see [troubleshooting](../troubleshooting.md).

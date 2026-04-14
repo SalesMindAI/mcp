@@ -1,6 +1,6 @@
 # Generic MCP client
 
-Any client that implements the [Model Context Protocol](https://modelcontextprotocol.io) can talk to the SalesMind AI MCP. Point it at one of these endpoints and add the `X-API-KEY` header.
+Any client that implements the [Model Context Protocol](https://modelcontextprotocol.io) can connect to the SalesMind AI MCP.
 
 ## Streamable HTTP (preferred)
 
@@ -10,15 +10,23 @@ Any client that implements the [Model Context Protocol](https://modelcontextprot
   - `Content-Type: application/json`
   - `Accept: application/json, text/event-stream`
   - `X-API-KEY: YOUR_API_KEY`
-- **Body:** a JSON-RPC 2.0 message (`initialize`, `tools/list`, `tools/call`, …)
+- **Body:** JSON-RPC 2.0 message (`initialize`, `tools/list`, `tools/call`, ...)
+
+### Alternative: query parameter auth
+
+If your client cannot set custom headers, pass the key in the URL:
+
+```
+POST https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY
+```
 
 ## SSE (legacy)
 
 - **SSE URL:** `GET https://mcp.sales-mind.ai/sse`
-- **Message URL:** `POST https://mcp.sales-mind.ai/messages` (the server returns the exact path in the initial `endpoint` event)
-- **Required headers on both:** `X-API-KEY: YOUR_API_KEY`
+- **Message URL:** `POST https://mcp.sales-mind.ai/messages` (returned in the initial `endpoint` event)
+- **Required header on both:** `X-API-KEY: YOUR_API_KEY`
 
-## Quick curl sanity check
+## Quick test with curl
 
 ```bash
 curl -s https://mcp.sales-mind.ai/mcp \
@@ -28,9 +36,9 @@ curl -s https://mcp.sales-mind.ai/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | jq .
 ```
 
-A successful response contains a `result.tools` array with the generated SalesMind AI tools.
+A successful response contains a `result.tools` array.
 
-## Python example with the official MCP SDK
+## Python example (MCP SDK)
 
 ```python
 import asyncio
@@ -52,7 +60,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-## TypeScript example with the official MCP SDK
+## TypeScript example (MCP SDK)
 
 ```ts
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";

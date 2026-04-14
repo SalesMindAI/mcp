@@ -1,18 +1,20 @@
 # Claude Desktop
 
-Claude Desktop does not support setting custom HTTP headers through its GUI or through a plain `"type": "http"` config entry. The workaround is to use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) — a lightweight local proxy that Claude Desktop launches as a subprocess, which in turn forwards requests to the remote MCP server with the correct header attached.
+> **Status:** Tested and working.
 
-**Prerequisites:** Node.js 18+ and `npx` (bundled with Node.js).
+Claude Desktop does not support custom HTTP headers in its config. The workaround is [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) -- a lightweight local proxy that Claude Desktop launches as a subprocess. It forwards requests to the remote MCP server with the correct header.
+
+**Prerequisite:** Node.js 18+ (includes `npx`).
 
 ## Configuration
 
-Close Claude Desktop, then edit the JSON config at:
+Close Claude Desktop, then edit the config file at:
 
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%AppData%\Claude\claude_desktop_config.json`
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
-Add the following entry inside `mcpServers`:
+Add this inside `mcpServers`:
 
 ```json
 {
@@ -33,11 +35,11 @@ Add the following entry inside `mcpServers`:
 }
 ```
 
-Replace `YOUR_API_KEY` with your actual SalesMind AI API key.
+Replace `YOUR_API_KEY` with your actual key.
 
-### Recommended: keep the key out of the config file
+### Keep the key out of the config file (optional)
 
-If you prefer not to store the key directly in the config, set `SALESMIND_API_KEY` as a permanent environment variable in your shell profile (`~/.zshrc`, `~/.bash_profile`, `~/.config/fish/config.fish`, or via System Preferences on macOS / System Properties on Windows). Then leave the `env` block empty or remove it:
+Set `SALESMIND_API_KEY` as a permanent environment variable in your shell profile (`~/.zshrc`, `~/.bash_profile`) or system settings. Then remove the `env` block:
 
 ```json
 {
@@ -55,11 +57,9 @@ If you prefer not to store the key directly in the config, set `SALESMIND_API_KE
 }
 ```
 
-`mcp-remote` expands `${SALESMIND_API_KEY}` from the environment at runtime.
+### SSE fallback
 
-### SSE transport (fallback)
-
-If you run into connection issues with the Streamable HTTP endpoint, use SSE:
+If Streamable HTTP gives you connection issues, use SSE:
 
 ```json
 {
@@ -82,16 +82,10 @@ If you run into connection issues with the Streamable HTTP endpoint, use SSE:
 }
 ```
 
-## How it works
-
-Claude Desktop treats the entry as a local MCP server. It runs `npx mcp-remote <url> --header ...` as a subprocess, which starts a local stdio-based MCP server that proxies all JSON-RPC messages to the remote SalesMind AI MCP server over HTTPS, attaching the `X-API-KEY` header on every request.
-
 ## Verify
 
 Save the config and relaunch Claude Desktop. In a new conversation, ask:
 
 > List every tool exposed by the SalesMind AI MCP.
 
-Claude should respond with a list of operations covering the SalesMind AI entities: agents, campaigns, lead lists, leads, personas, senders, and growth automations.
-
-If nothing appears, open **Help → Open Logs Folder** in Claude Desktop and look for MCP-related errors. Most failures are caused by Node.js not being on `PATH` for GUI apps — see [troubleshooting](../troubleshooting.md) for the fix.
+Claude should respond with the available operations. If nothing appears, open **Help > Open Logs Folder** and check for MCP errors. The most common issue is Node.js not being on `PATH` -- see [troubleshooting](../troubleshooting.md).

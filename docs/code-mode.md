@@ -1,83 +1,90 @@
-# Code mode
+# How it works: search + execute
 
-Code mode is a way of using an MCP server that replaces *many individual tool calls* with a *single code-execution tool*. Instead of exposing every SalesMind AI operation as its own tool entry (`listCampaigns`, `listCampaignGrowths`, `listAgentSenders`, …), the client presents the model with one tool — `run_code` — together with TypeScript type definitions for every available operation. The model writes a short program that calls those operations, the program runs inside a sandbox, and the result is returned as a single tool response.
+The SalesMind AI MCP uses a **two-tool architecture** instead of exposing every API endpoint as a separate tool. This page explains what that means and why it matters.
 
-This pattern is documented by Anthropic in *["Code execution with MCP: Building more efficient agents"](https://www.anthropic.com/engineering/code-execution-with-mcp)* and by Cloudflare under the name *["Code mode"](https://blog.cloudflare.com/code-mode/)*. Both implementations are compatible with the SalesMind AI MCP because code mode is a client-side technique — the server does not need to know about it.
+## The two tools
 
-## Why code mode matters
+### `search(query, selected_fields?)`
 
-Large MCP servers can register dozens or hundreds of tools. Listing all of them in the system prompt inflates context, slows the model, and increases cost. Code mode addresses three concrete problems:
+Finds relevant API endpoints by keyword.
 
-1. **Context bloat.** Only the single `run_code` tool and the types the model actually references need to sit in context.
-2. **Multi-step workflows.** Chaining ten tool calls costs ten round-trips with full JSON responses in between. A single script chains them locally and only returns the final, shaped result.
-3. **Data shaping.** The model can `filter`, `map`, `sort`, and `slice` inside the sandbox so that only the data that matters reaches the conversation.
+**Input:**
+- `query` -- a keyword like `"campaigns"`, `"leads"`, or `"create agent"`
+- `selected_fields` (optional) -- an array of field names you want in the results (e.g., `["name", "status"]`)
 
-In practice, workflows that touch many SalesMind AI endpoints (bulk enrichment, pipeline analytics, cohort scoring) can drop their token usage by an order of magnitude.
+**Output:** A structured response containing:
+- The matching API endpoints (method + path + description)
+- Available filters and parameters
+- Hints for ID-based filters (the server detects when a filter requires a resource ID and tells the assistant where to look it up)
 
-## How it works with the SalesMind AI MCP
+### `execute(code, selected_fields?)`
 
-The SalesMind AI MCP generates its tools from the published OpenAPI specification. A code-mode-aware client does the following at startup:
+Runs a JavaScript snippet against the SalesMind AI API inside a secure sandbox.
 
-1. Connects to `https://mcp.sales-mind.ai/mcp` and calls `tools/list` to discover every tool and its JSON Schema.
-2. Transpiles the schemas to TypeScript declarations — one typed function per tool — and ships them to the model as part of the system prompt (or loads them on demand).
-3. Exposes a single `run_code` tool whose input is a TypeScript/JavaScript snippet.
-4. When the model calls `run_code`, the snippet runs inside an isolated sandbox (V8 isolate, Deno Deploy, Node worker, Cloudflare Worker, etc.). The sandbox implements each typed function by issuing the corresponding MCP tool call back to the SalesMind AI MCP, carrying the user's `X-API-KEY` header.
-5. The final value returned by the snippet is sent back as the tool result.
+**Input:**
+- `code` -- an async JavaScript function that uses `api.request(method, path, options)` to call the API
+- `selected_fields` (optional) -- fields to pick from each result item
 
-From the server's point of view nothing changes: it still sees normal MCP tool calls over Streamable HTTP or SSE.
+**Output:** The API response, automatically cleaned up for LLM consumption:
+- JSON-LD wrappers stripped
+- Collections flattened to `{ pagination, data[] }`
+- Empty values removed
+- Long strings truncated
 
-## Example
+## Example workflow
 
-The SalesMind AI data model includes **Agents**, **Campaigns** (status: DRAFT / ACTIVE / PAUSE), **Lead Lists**, **Leads**, **Personas**, **Senders** (LinkedIn accounts), and **Growth automations**. Tool names are generated from the SalesMind AI OpenAPI spec — call `tools/list` on the MCP endpoint to see the exact names for your version.
+When you ask *"Show me my active campaigns and how many growth steps each one has"*, the assistant:
 
-Below is a realistic workflow: *"For every active campaign, show me its name and how many growth automation steps it has configured."*
+**Step 1 -- Search:**
+```
+search("campaigns growth")
+```
+Returns the relevant endpoints: `GET /v1/campaign`, `GET /v1/campaign-growth`, etc.
 
-**Classic tool-calling mode** — the model makes N+1 round trips, and every intermediate response sits in context:
+**Step 2 -- Execute:**
+```js
+const campaigns = await api.request("GET", "/v1/campaign", {
+  query: { status: "ACTIVE" }
+});
 
-1. `listCampaigns({ status: "ACTIVE" })` → full collection of campaign objects returned to context
-2. `listCampaignGrowths({ campaignId: "…" })` × N — one call per campaign, each response in context
-3. Model filters and formats in its head
-
-**Code mode** — the model emits one snippet, runs it in the sandbox, and receives only the shaped result:
-
-```ts
-// run_code input
-const campaigns = await sm.listCampaigns({ status: "ACTIVE" });
-
-const withGrowth = await Promise.all(
-  campaigns.items.map(async (c) => ({
-    name: c.name,
-    growth: await sm.listCampaignGrowths({ campaignId: c.id }),
-  }))
-);
-
-return withGrowth
-  .sort((a, b) => b.growth.total - a.growth.total)
-  .map((e) => ({
-    campaign: e.name,
-    growthSteps: e.growth.total,
-  }));
+const results = [];
+for (const c of campaigns.items) {
+  const growths = await api.request("GET", "/v1/campaign-growth", {
+    query: { campaign: c["@id"] }
+  });
+  results.push({ name: c.name, growthSteps: growths.items.length });
+}
+return results;
 ```
 
-The model receives a compact ranked array — not the full campaign collection plus N growth-step collections.
+The assistant receives a compact result and answers you in plain language. You never see the code or the raw API responses.
 
-## Enabling code mode
+## Why not one tool per endpoint?
 
-Code mode is provided by the **client**, not by the SalesMind AI MCP. The matrix below reflects widely-deployed clients; check each project's release notes for the latest status.
+Large APIs can have dozens or hundreds of endpoints. Exposing each one as an MCP tool creates problems:
 
-| Client | Code-mode support | Notes |
-| --- | --- | --- |
-| Cloudflare Agents SDK | Native | Coined the name "code mode". Uses Workers + V8 isolates. |
-| Anthropic API (via SDK examples) | Pattern | Anthropic publishes reference implementations you can adapt. |
-| Claude Code | Available as a setting / plugin | Enable code-mode sandboxing in the configuration when supported. |
-| Cursor, Windsurf, OpenCode, Gemini CLI | Community plugins | Behaviour varies — consult each project. |
-| OpenAI Responses API | Can be emulated with `code_interpreter` + MCP | Pattern, not a built-in switch. |
+| Problem | Two-tool approach |
+| --- | --- |
+| **Context bloat** -- dozens of tool schemas in every prompt | Only 2 tool schemas, always |
+| **Multi-step workflows** -- one round trip per tool call | One `execute` call chains multiple API requests |
+| **Stale tools** -- adding an API endpoint requires updating tools | Tools auto-generate from the OpenAPI spec |
+| **Data shaping** -- raw API responses bloat the conversation | Responses are cleaned and filtered automatically |
 
-If your client does not yet support code mode, the SalesMind AI MCP still works perfectly in classic tool-calling mode. You only pay the context cost of the tools the model actually selects.
+## Response normalization
 
-## Operational notes
+The `execute` tool automatically optimizes API responses before returning them:
 
-- **Latency.** Snippets run in a sandbox close to the client. Each SalesMind AI call inside the snippet still goes to `mcp.sales-mind.ai`, so round-trip time is the same as classic mode — but there are typically fewer round trips.
-- **Security.** Code mode sandboxes must deny filesystem and network access to anything other than the MCP server. Any reputable implementation does this by default.
-- **Debugging.** Errors thrown inside a snippet are returned as the tool result. Wrap calls in `try/catch` when instructing the model, or rely on the client's default error surfacing.
-- **Rate limits.** A code-mode snippet can fan out many calls at once — be mindful of the SalesMind AI API rate limit on your plan and batch where appropriate.
+- Extracts the payload from API wrappers (`data`, `member`, `hydra:member`)
+- Removes metadata fields (`@context`, `@type`, `hydra:view`, etc.)
+- Flattens nested objects (e.g., `{ user: { name: "John" } }` becomes `{ user_name: "John" }`)
+- Removes null/empty values
+- Truncates very long strings
+- Wraps everything in a consistent `{ pagination, data[] }` format
+
+This typically reduces token usage by 30-70% compared to raw API responses.
+
+## What you need to know as a user
+
+Nothing, really. The assistant handles the search-then-execute workflow automatically. Just describe what you want in plain language, and the assistant will figure out which endpoints to call and how to combine the results.
+
+If you are building your own integration, see [generic client](installation/generic.md) for direct API examples.

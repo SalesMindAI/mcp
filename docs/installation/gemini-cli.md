@@ -1,6 +1,6 @@
 # Gemini CLI
 
-The [Gemini CLI](https://github.com/google-gemini/gemini-cli) supports remote MCP servers defined in `~/.gemini/settings.json` (user scope) or `.gemini/settings.json` (project scope).
+The [Gemini CLI](https://github.com/google-gemini/gemini-cli) supports remote MCP servers in `~/.gemini/settings.json` (user scope) or `.gemini/settings.json` (project scope).
 
 ## Configuration
 
@@ -33,18 +33,18 @@ For SSE:
 }
 ```
 
-> The Gemini CLI distinguishes `httpUrl` (Streamable HTTP) from `url` (SSE). Use the right field for your transport.
+> Gemini CLI uses `httpUrl` for Streamable HTTP and `url` for SSE -- different field names.
 
 ## Verify
 
-Launch `gemini` in a terminal and run:
+Launch `gemini` and run:
 
 ```
 /mcp
 ```
 
-`salesmind` should be listed under **Connected**. Then prompt:
+`salesmind` should appear under **Connected**. Then:
 
-> Using SalesMind AI, summarise the status of my sales pipeline.
+> Using SalesMind AI, show me my active campaigns.
 
-If nothing happens, inspect the CLI log with `gemini --debug` or see [troubleshooting](../troubleshooting.md).
+If nothing happens, try `gemini --debug` or see [troubleshooting](../troubleshooting.md).
