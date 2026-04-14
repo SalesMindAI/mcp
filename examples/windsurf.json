@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "salesmind": {
+      "serverUrl": "https://mcp.sales-mind.ai/sse",
+      "headers": {
+        "X-API-KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}

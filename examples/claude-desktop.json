@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "salesmind": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.sales-mind.ai/mcp",
+        "--header",
+        "X-API-KEY:${SALESMIND_API_KEY}"
+      ],
+      "env": {
+        "SALESMIND_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
