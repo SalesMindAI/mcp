@@ -61,6 +61,7 @@ Pick your client and follow the guide. Each one ends with a verification step.
 | [Getting started](docs/getting-started.md) | What MCP is, how the server works, the two tools |
 | [Authentication](docs/authentication.md) | API key management, header vs. query parameter auth |
 | [How it works (search + execute)](docs/code-mode.md) | The two-tool architecture and why it matters |
+| [Skills (Claude Code)](skills/) | Ready-to-install skill that helps Claude use the MCP |
 | [Troubleshooting](docs/troubleshooting.md) | Common errors and how to fix them |
 | [FAQ](docs/faq.md) | Frequently asked questions |
 

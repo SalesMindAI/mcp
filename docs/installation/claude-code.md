@@ -79,3 +79,13 @@ Add to `.mcp.json` at the project root or `~/.claude.json` for user scope:
   }
 }
 ```
+
+## Skills (optional)
+
+Install the SalesMind AI skill to help Claude use the MCP more effectively:
+
+```bash
+cp -r skills/salesmind ~/.claude/skills/salesmind
+```
+
+The skill teaches Claude the search + execute workflow, entity keywords, and common patterns. See [skills/](../../skills/) for details.

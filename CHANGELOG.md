@@ -16,6 +16,7 @@ All notable changes to this documentation are tracked here. The project follows 
 - **Query parameter authentication** (`?api_key=YOUR_KEY`) documented in authentication.md and the OpenAI installation guide. Useful for clients that cannot set custom HTTP headers (ChatGPT Web, ChatGPT Desktop, etc.).
 - ChatGPT Web and ChatGPT Desktop setup instructions in the OpenAI guide.
 - FAQ entry for "my client can't set custom headers".
+- **Claude Code skill** (`skills/salesmind/`) -- ready-to-install skill with SKILL.md and reference.md. Auto-invoked when users mention SalesMind AI data. Covers search+execute workflow, entity keywords, IRI filters, pagination, and common patterns.
 
 ### Removed
 
