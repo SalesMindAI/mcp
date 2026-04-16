@@ -31,3 +31,12 @@ The SalesMind AI REST API itself and the clients listed in the installation guid
 - API keys are never logged server-side.
 - Requests are rate-limited per key.
 - See the main SalesMind AI privacy policy at <https://sales-mind.ai/privacy> for retention and compliance details.
+
+## OAuth token storage
+
+- OAuth tokens and client registrations are stored in a server-side SQLite database.
+- Access tokens are short-lived (1 hour) and automatically expire.
+- Refresh tokens expire after 30 days and are **rotated on each use** -- the old token is revoked when a new one is issued.
+- Authorization codes are single-use and expire after 10 minutes.
+- Expired and revoked tokens are purged from the database every 10 minutes.
+- Your SalesMind API key is stored in the token database to map tokens to API access. It is never transmitted to the MCP client -- the client only receives opaque OAuth tokens.

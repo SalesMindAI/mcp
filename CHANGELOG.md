@@ -2,6 +2,26 @@
 
 All notable changes to this documentation are tracked here. The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-04-16
+
+### Added
+
+- **OAuth 2.1 authentication** documented as the recommended method across all pages. The server now supports OAuth with Dynamic Client Registration (RFC 7591), PKCE S256, token rotation, and a branded login page.
+- New OAuth section in [authentication.md](docs/authentication.md) with comparison table, security details, and full flow explanation.
+- OAuth setup instructions in all installation guides: ChatGPT (automatic via connector), Claude Desktop (via `mcp-remote`), Claude Code (native), and generic clients.
+- OAuth support notes added to Cursor, Gemini CLI, OpenCode, and Windsurf installation guides.
+- New FAQ entry: "How does OAuth work with SalesMind AI?"
+- OAuth-specific troubleshooting for 401 errors.
+- OAuth token storage details in SECURITY.md.
+
+### Changed
+
+- Authentication is now presented as three methods (OAuth, header, query param) with OAuth recommended, across getting-started.md, README.md, and all installation guides.
+- ChatGPT/OpenAI guide rewritten: OAuth is the primary setup method, replacing the query parameter approach.
+- Claude Desktop and Claude Code guides restructured: OAuth config shown first (simpler, no API key in config file), header method shown as alternative.
+- FAQ "can't set custom headers" answer updated to recommend OAuth first.
+- Troubleshooting Claude Desktop example updated to use OAuth config.
+
 ## [1.1.0] — 2026-04-14
 
 ### Changed

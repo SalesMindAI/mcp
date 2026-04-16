@@ -11,6 +11,12 @@ Common issues when connecting to the SalesMind AI MCP and how to fix them.
 
 ## `401 Unauthorized` or `403 Forbidden`
 
+**If using OAuth:**
+- Your access token may have expired. Your client should refresh it automatically. If it doesn't, try disconnecting and reconnecting the server to re-authorize.
+- If you rotated or revoked your API key in the SalesMind AI dashboard, all OAuth tokens mapped to that key are invalidated. Re-authorize by reconnecting the server.
+- If the 401 response includes a `WWW-Authenticate` header, your client needs to support OAuth to proceed. See [authentication](authentication.md#oauth-21-recommended).
+
+**If using an API key (header or query parameter):**
 - The API key is missing, empty, or incorrect.
 - The key may have been revoked -- generate a new one in **Settings > API keys**.
 - Check for hidden newlines or spaces in the key (re-copy it cleanly).
@@ -52,12 +58,13 @@ Claude Desktop runs as a GUI app with a limited `PATH` that may not include Node
   "mcpServers": {
     "salesmind": {
       "command": "/usr/local/bin/npx",
-      "args": ["mcp-remote", "https://mcp.sales-mind.ai/mcp", "--header", "X-API-KEY:${SALESMIND_API_KEY}"],
-      "env": { "SALESMIND_API_KEY": "YOUR_API_KEY" }
+      "args": ["mcp-remote", "https://mcp.sales-mind.ai/mcp"]
     }
   }
 }
 ```
+
+> **Note:** This example uses OAuth (recommended). If you use the API key header method instead, add `"--header", "X-API-KEY:${SALESMIND_API_KEY}"` to the `args` array and set the key in an `env` block. See [Claude Desktop installation](installation/claude-desktop.md).
 
 Find the correct path:
 - macOS/Linux: `which npx`

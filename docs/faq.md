@@ -10,7 +10,13 @@ Use **Streamable HTTP** (`/mcp`) whenever your client supports it. Fall back to 
 
 ### My client can't set custom headers. What do I do?
 
-Use the query parameter method: `https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY`. This works for ChatGPT Web, ChatGPT Desktop, and any client that only supports OAuth or no auth. See [authentication](authentication.md#query-parameter).
+Use **OAuth** -- it's the recommended method and works with clients that don't support custom headers, including ChatGPT and Claude Desktop. Just point your client at `https://mcp.sales-mind.ai/mcp` without any headers. The server will trigger an OAuth flow and you'll enter your API key on a secure login page. See [authentication](authentication.md#oauth-21-recommended).
+
+If your client doesn't support OAuth either, use the query parameter method: `https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY`. See [authentication](authentication.md#query-parameter).
+
+### How does OAuth work with SalesMind AI?
+
+When you connect with a client that supports OAuth (ChatGPT, Claude Desktop, Claude Code), the client discovers the server's OAuth endpoints automatically. You're redirected to a branded SalesMind AI login page where you enter your API key. The server validates the key and issues short-lived OAuth tokens. Your API key stays on the server and is never shared with the client. Access tokens expire after 1 hour and are refreshed automatically. See [authentication](authentication.md#oauth-21-recommended) for the full flow.
 
 ### Is the API key the same as my SalesMind AI password?
 

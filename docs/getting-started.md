@@ -19,12 +19,13 @@ Both endpoints expose the same tools and accept the same authentication. Use Str
 
 ## Authentication
 
-Every request must include your SalesMind AI API key. Two methods are supported:
+The server supports three authentication methods:
 
-1. **HTTP header** (preferred): `X-API-KEY: YOUR_API_KEY`
-2. **Query parameter** (for clients that cannot set headers): `https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY`
+1. **OAuth 2.1** (recommended): The most secure option. Your client handles the flow automatically -- you enter your API key once on a secure login page, and the server issues tokens. Your key never leaves the server. Works with ChatGPT, Claude Desktop, Claude Code, and any MCP-spec-compliant client.
+2. **HTTP header**: `X-API-KEY: YOUR_API_KEY` -- for IDE clients (Cursor, Windsurf, OpenCode, Codex) that support custom headers.
+3. **Query parameter**: `https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY` -- for clients that cannot set headers or use OAuth.
 
-See [authentication.md](authentication.md) for details on generating and managing keys.
+See [authentication.md](authentication.md) for full details on OAuth setup, key management, and security.
 
 ## How the server works
 
