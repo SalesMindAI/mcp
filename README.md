@@ -6,7 +6,7 @@ The SalesMind AI MCP lets any MCP-compatible AI assistant -- Claude, ChatGPT, Ge
 
 - **Streamable HTTP endpoint:** `https://mcp.sales-mind.ai/mcp`
 - **SSE endpoint (legacy):** `https://mcp.sales-mind.ai/sse`
-- **Authentication:** `X-API-KEY` header or `?api_key=` query parameter
+- **Authentication:** OAuth 2.1 (recommended), `X-API-KEY` header, or `?api_key=` query parameter
 - **Protocol:** [Model Context Protocol](https://modelcontextprotocol.io)
 
 ---
@@ -29,9 +29,7 @@ Most clients accept a config like this:
 }
 ```
 
-> **Can't set custom headers?** (ChatGPT Web, ChatGPT Desktop, etc.)
-> Use the query parameter method instead: `https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY`
-> See [authentication](docs/authentication.md#query-parameter) for details.
+> **OAuth 2.1 (recommended):** Clients that support MCP OAuth (ChatGPT, Claude Desktop, Claude Code) can connect without any API key in the config. Just point the client at `https://mcp.sales-mind.ai/mcp` -- you'll be redirected to a secure login page to enter your key once. See [authentication](docs/authentication.md#oauth-21-recommended) for details.
 
 ---
 
@@ -59,7 +57,7 @@ Pick your client and follow the guide. Each one ends with a verification step.
 | Page | What it covers |
 | --- | --- |
 | [Getting started](docs/getting-started.md) | What MCP is, how the server works, the two tools |
-| [Authentication](docs/authentication.md) | API key management, header vs. query parameter auth |
+| [Authentication](docs/authentication.md) | OAuth 2.1 (recommended), API key header, query parameter |
 | [How it works (search + execute)](docs/code-mode.md) | The two-tool architecture and why it matters |
 | [Skills (Claude Code)](skills/) | Ready-to-install skill that helps Claude use the MCP |
 | [Troubleshooting](docs/troubleshooting.md) | Common errors and how to fix them |

@@ -2,6 +2,8 @@
 
 The [Gemini CLI](https://github.com/google-gemini/gemini-cli) supports remote MCP servers in `~/.gemini/settings.json` (user scope) or `.gemini/settings.json` (project scope).
 
+> **OAuth support:** If Gemini CLI adds MCP OAuth support, you can omit the `headers` block -- the server will handle authentication via OAuth automatically. See [authentication](../authentication.md) for details.
+
 ## Configuration
 
 ```json

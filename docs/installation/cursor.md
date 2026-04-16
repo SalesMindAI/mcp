@@ -2,6 +2,8 @@
 
 Cursor reads MCP config from `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project).
 
+> **OAuth support:** If your version of Cursor supports MCP OAuth, you can omit the `headers` block entirely -- the server will trigger an OAuth flow and you'll enter your API key on a secure login page. See [authentication](../authentication.md) for details.
+
 ## Configuration
 
 ```json

@@ -1,37 +1,85 @@
 # Authentication
 
-The SalesMind AI MCP authenticates every request using your API key. Two methods are supported.
+The SalesMind AI MCP server supports three authentication methods. **OAuth 2.1 is recommended** -- it is the most secure option and works automatically with MCP-compliant clients like ChatGPT, Claude, and others.
 
-## HTTP header (preferred)
+| Method | Security | Best for |
+| --- | --- | --- |
+| **OAuth 2.1** (recommended) | Highest -- PKCE, token rotation, scoped access | ChatGPT, Claude Desktop, any MCP-spec client |
+| X-API-KEY header | Good -- key sent over TLS | IDE clients (Cursor, Windsurf, OpenCode, Codex) |
+| `?api_key=` query parameter | Acceptable -- key in URL over TLS | Clients that cannot set headers or use OAuth |
 
-Send the key in the `X-API-KEY` header:
+The server checks credentials in this order:
+
+1. `Authorization: Bearer <token>` (OAuth)
+2. `X-API-KEY` header
+3. `api_key` query parameter
+
+---
+
+## OAuth 2.1 (recommended)
+
+OAuth 2.1 is the recommended authentication method. Your API key never leaves the server -- you enter it once during authorization, and the server issues short-lived tokens mapped to that key.
+
+### How it works
+
+MCP-compliant clients handle the OAuth flow automatically. When you connect for the first time:
+
+1. The client discovers the server's OAuth endpoints via `/.well-known/oauth-authorization-server` or `/.well-known/oauth-protected-resource`.
+2. The client registers itself via Dynamic Client Registration (`POST /oauth/register`).
+3. You are redirected to a branded SalesMind AI login page.
+4. You enter your API key. The server validates it against the SalesMind API.
+5. On success, the server issues an authorization code and redirects back to the client.
+6. The client exchanges the code for an access token and a refresh token.
+7. All subsequent requests use `Authorization: Bearer <token>`.
+8. When the access token expires (1 hour), the client automatically refreshes it.
+
+### Supported clients
+
+OAuth works out of the box with:
+
+- **ChatGPT** (Web and Desktop) -- connects via the ChatGPT connector/Apps system
+- **Claude Desktop** -- via `mcp-remote`, which supports OAuth discovery
+- **Claude Code** -- supports OAuth natively for remote MCP servers
+- Any client that implements the [MCP authorization spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization)
+
+See the [installation guides](../README.md#installation-guides) for client-specific setup.
+
+### Security details
+
+- **PKCE S256** is used when the client supports it (Claude, spec-compliant clients). ChatGPT connects without PKCE but uses HTTPS-only redirect URIs.
+- **Token rotation:** refresh tokens are single-use. Each refresh issues a new token pair and revokes the old one.
+- **Token lifetimes:** access tokens expire after 1 hour, refresh tokens after 30 days.
+- **Your API key is never exposed** to the MCP client. The client only sees OAuth tokens; the server maps tokens to your API key internally.
+
+---
+
+## HTTP header
+
+Send your API key directly in the `X-API-KEY` header:
 
 ```
 X-API-KEY: YOUR_API_KEY
 ```
 
-This is the standard method. Most MCP clients let you configure custom headers -- see the [installation guides](../README.md#installation-guides) for your client.
+This is the standard method for IDE-based clients that support custom headers but do not support OAuth. Most MCP clients let you configure headers -- see the [installation guides](../README.md#installation-guides) for your client.
+
+---
 
 ## Query parameter
 
-For clients that **cannot set custom HTTP headers** (e.g., ChatGPT Web, ChatGPT Desktop, or other OAuth-only clients), append the key as a query parameter:
+For clients that **cannot set custom HTTP headers or use OAuth**, append the key as a query parameter:
 
 ```
 https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY
 ```
 
-The server checks for the key in this order:
+> **Note:** This method is functional but less preferred. The key appears in server logs and URL history. Use OAuth or the header method when possible.
 
-1. `X-API-KEY` header
-2. `api_key` query parameter
-
-If both are present, the header takes priority.
-
-> **Note:** The query parameter method is equally functional. Use it whenever your client does not support custom headers.
+---
 
 ## Where to get a key
 
-1. Sign in to the SalesMind AI dashboard.
+1. Sign in to the [SalesMind AI dashboard](https://apps.sales-mind.ai/user/settings?tab=2).
 2. Open **Settings > API keys**.
 3. Click **Create key**, give it a name (e.g., `claude-desktop`), and copy the value.
 
@@ -70,6 +118,8 @@ Set `SALESMIND_API_KEY` in your shell profile (`~/.zshrc`, `~/.bashrc`) or your 
 
 This order prevents downtime.
 
+> **Note:** If you authenticated via OAuth, rotating your API key invalidates all OAuth tokens mapped to the old key. You will need to re-authorize each client after the rotation.
+
 ## Revoking a compromised key
 
 1. Go to **Settings > API keys**.
@@ -81,3 +131,4 @@ This order prevents downtime.
 - Do not commit keys to git. Add `.env` and config files containing secrets to `.gitignore`.
 - Use one key per device or application so you can revoke narrowly.
 - All traffic to `mcp.sales-mind.ai` is served over TLS -- never connect over plain HTTP.
+- **Prefer OAuth** whenever your client supports it. Your API key stays on the server and is never transmitted to the client.

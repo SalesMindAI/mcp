@@ -2,7 +2,36 @@
 
 Any client that implements the [Model Context Protocol](https://modelcontextprotocol.io) can connect to the SalesMind AI MCP.
 
-## Streamable HTTP (preferred)
+## OAuth 2.1 (recommended)
+
+If your client supports MCP OAuth (RFC 8414 / RFC 9728), it can authenticate automatically:
+
+1. Point the client at `https://mcp.sales-mind.ai/mcp`.
+2. The server responds with `401` and a `WWW-Authenticate: Bearer resource_metadata="..."` header.
+3. The client discovers OAuth endpoints via `/.well-known/oauth-authorization-server` or `/.well-known/oauth-protected-resource`.
+4. The client registers via `POST /oauth/register` (Dynamic Client Registration).
+5. The user is redirected to a branded login page to enter their SalesMind API key.
+6. After authorization, the client uses `Authorization: Bearer <token>` for all requests.
+
+### OAuth metadata endpoints
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /.well-known/oauth-authorization-server` | Authorization Server metadata (RFC 8414) |
+| `GET /.well-known/oauth-protected-resource` | Protected Resource metadata (RFC 9728) |
+| `POST /oauth/register` | Dynamic Client Registration (RFC 7591) |
+| `GET /oauth/authorize` | Authorization page (user enters API key) |
+| `POST /oauth/token` | Token exchange and refresh |
+
+### Token details
+
+- Access tokens expire after **1 hour**.
+- Refresh tokens expire after **30 days** and are rotated on each use.
+- PKCE S256 is supported and enforced when the client provides a `code_challenge`.
+
+---
+
+## Streamable HTTP with API key header
 
 - **URL:** `https://mcp.sales-mind.ai/mcp`
 - **Method:** `POST`
@@ -14,7 +43,7 @@ Any client that implements the [Model Context Protocol](https://modelcontextprot
 
 ### Alternative: query parameter auth
 
-If your client cannot set custom headers, pass the key in the URL:
+If your client cannot set custom headers or use OAuth, pass the key in the URL:
 
 ```
 POST https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY

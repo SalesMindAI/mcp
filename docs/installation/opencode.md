@@ -4,6 +4,8 @@
 
 [OpenCode](https://opencode.ai) is an open-source terminal coding agent that supports MCP through its `opencode.json` config file.
 
+> **OAuth support:** If OpenCode adds MCP OAuth support, you can omit the `headers` block -- the server will handle authentication via OAuth automatically. See [authentication](../authentication.md) for details.
+
 ## Configuration
 
 Edit `~/.config/opencode/opencode.json` (user scope) or `opencode.json` in the project root:

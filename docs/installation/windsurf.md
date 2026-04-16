@@ -2,6 +2,8 @@
 
 Windsurf (by Codeium) reads MCP config from `~/.codeium/windsurf/mcp_config.json`.
 
+> **OAuth support:** If Windsurf adds MCP OAuth support, you can omit the `headers` block -- the server will handle authentication via OAuth automatically. See [authentication](../authentication.md) for details.
+
 ## Configuration
 
 SSE (default for Windsurf):

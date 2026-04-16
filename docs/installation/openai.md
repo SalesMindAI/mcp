@@ -4,22 +4,24 @@ This guide covers connecting to the SalesMind AI MCP from OpenAI products: ChatG
 
 ## ChatGPT Web and ChatGPT Desktop
 
-ChatGPT Web and Desktop do not support custom HTTP headers for MCP connections. Use the **query parameter** method instead -- append your API key directly in the URL.
+ChatGPT connects to the SalesMind AI MCP via **OAuth 2.1**. You authenticate by entering your SalesMind API key on a secure login page -- ChatGPT never sees your raw key.
 
 ### Setup
 
 1. In ChatGPT, go to **Settings > Connectors > Create** (Team/Enterprise plans).
-2. Enter the MCP URL **with your API key as a query parameter**:
+2. Enter the MCP URL:
 
    ```
-   https://mcp.sales-mind.ai/mcp?api_key=YOUR_API_KEY
+   https://mcp.sales-mind.ai/mcp
    ```
 
-3. Save and authorize the connector for your conversation.
+3. ChatGPT will discover the OAuth endpoints automatically and redirect you to the SalesMind AI login page.
+4. Enter your API key. The server validates it and issues OAuth tokens.
+5. Authorize the connector for your conversation.
 
 That's it. ChatGPT will discover the `search` and `execute` tools automatically.
 
-> **Why query parameter?** ChatGPT Web and Desktop only support OAuth or no auth for MCP connections -- they cannot send custom headers like `X-API-KEY`. The query parameter fallback (`?api_key=`) solves this. The connection is still over HTTPS, so the key is encrypted in transit.
+> **How does auth work?** ChatGPT uses Dynamic Client Registration (DCR) to register itself, then redirects you to a branded SalesMind AI login page where you enter your API key. The server validates the key, issues an access token and a refresh token, and returns them to ChatGPT. Your API key never leaves the server. See [authentication](../authentication.md) for details.
 
 ### Verify
 
@@ -32,6 +34,8 @@ ChatGPT should call the MCP tools and return your data.
 ---
 
 ## Responses API (TypeScript)
+
+The Responses API supports custom headers, so you can use the `X-API-KEY` header directly:
 
 ```ts
 import OpenAI from "openai";

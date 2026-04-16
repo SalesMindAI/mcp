@@ -2,19 +2,35 @@
 
 > **Status:** Tested and working.
 
-Claude Desktop does not support custom HTTP headers in its config. The workaround is [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) -- a lightweight local proxy that Claude Desktop launches as a subprocess. It forwards requests to the remote MCP server with the correct header.
+Claude Desktop connects via [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) -- a lightweight local proxy that Claude Desktop launches as a subprocess.
 
 **Prerequisite:** Node.js 18+ (includes `npx`).
 
-## Configuration
+## OAuth 2.1 (recommended)
 
-Close Claude Desktop, then edit the config file at:
+`mcp-remote` supports OAuth discovery. When no API key header is provided, the SalesMind AI server returns a `401` with a `WWW-Authenticate` header pointing to the OAuth metadata. `mcp-remote` will automatically open a browser window where you enter your API key on the SalesMind AI login page.
 
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%AppData%\Claude\claude_desktop_config.json`
-- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+```json
+{
+  "mcpServers": {
+    "salesmind": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.sales-mind.ai/mcp"
+      ]
+    }
+  }
+}
+```
 
-Add this inside `mcpServers`:
+On first launch, your browser opens the SalesMind AI authorization page. Enter your API key, and `mcp-remote` stores the OAuth tokens locally. Subsequent launches reuse the tokens automatically.
+
+> **This is the recommended method.** Your API key is entered once on a secure page and never stored in a config file. Token refresh is handled automatically.
+
+## API key via header (alternative)
+
+If you prefer to skip OAuth and pass your API key directly:
 
 ```json
 {
@@ -57,7 +73,13 @@ Set `SALESMIND_API_KEY` as a permanent environment variable in your shell profil
 }
 ```
 
-### SSE fallback
+## Configuration file location
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%AppData%\Claude\claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+## SSE fallback
 
 If Streamable HTTP gives you connection issues, use SSE:
 
@@ -70,17 +92,14 @@ If Streamable HTTP gives you connection issues, use SSE:
         "mcp-remote",
         "https://mcp.sales-mind.ai/sse",
         "--transport",
-        "sse-only",
-        "--header",
-        "X-API-KEY:${SALESMIND_API_KEY}"
-      ],
-      "env": {
-        "SALESMIND_API_KEY": "YOUR_API_KEY"
-      }
+        "sse-only"
+      ]
     }
   }
 }
 ```
+
+This also supports OAuth -- `mcp-remote` will handle the authorization flow the same way.
 
 ## Verify
 
